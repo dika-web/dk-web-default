@@ -8,7 +8,7 @@ import {
 
 import { userKey } from '@core/constants';
 import { SessionStorageService } from '@core/services';
-import { UserCredentials } from '@core/interfaces';
+import { UserInfo } from '@core/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +22,9 @@ export class AuthGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): boolean {
-    let isAuthenticated = this.sessionStorage.getItem<UserCredentials>(userKey);
+    let isAuthenticated = this.sessionStorage.getItem<UserInfo>(userKey);
+
+    if (!isAuthenticated) this.router.navigate(['sign-in']);
 
     return Boolean(isAuthenticated);
   }

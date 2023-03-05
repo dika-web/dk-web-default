@@ -1,1 +1,1 @@
-export * from './user-credentials.interface';
+export * from './user-info.interface';

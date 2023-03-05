@@ -2,24 +2,36 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { SharedModule } from './shared';
-import { RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from './core/auth/services';
+import { AngularFireModule } from '@angular/fire/compat';
+import { environment } from 'src/environments/environment.prod';
+import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
+import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
+import { StoreModule } from '@ngrx/store';
+import { UserState } from '@shared/store/state';
+import { userReducer } from '@core/store/reducer';
+import { AppRoutingModule } from './app-routing.module';
 import { BrowserModule } from '@angular/platform-browser';
-import { HomeComponent } from './core/home';
-import { LoginComponent } from './core/auth/components';
-
-const routes: Routes = [
-  { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
-  { path: 'login', component: LoginComponent },
-];
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientModule } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent],
+  declarations: [AppComponent],
   imports: [
-    RouterModule.forRoot(routes),
+    CommonModule,
     BrowserModule,
+    BrowserAnimationsModule,
+    AppRoutingModule,
+    HttpClientModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AngularFireModule.initializeApp(environment.firebaseConfig),
+    AngularFirestoreModule,
+    AngularFireDatabaseModule,
     SharedModule,
-    LoginComponent,
+    StoreModule.forRoot({}),
+    StoreModule.forFeature(UserState.featureKey, userReducer),
   ],
   providers: [],
   bootstrap: [AppComponent],
