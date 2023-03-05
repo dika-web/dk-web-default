@@ -20,6 +20,9 @@
       "es2018",
       "dom"
     ],
+    "types": [
+      "firebase"
+    ],
     "paths": {
       "@shared/*": [
         "src/app/shared/*"

@@ -1,0 +1,35 @@
+<form [formGroup]="form" (ngSubmit)='registerUser()' *ngIf='!(isUserRegistered$ | async)'>
+  <h2>Sign up</h2>
+  <mat-form-field class="example-full-width">
+    <mat-label>Username</mat-label>
+    <input formControlName="username" matInput required>
+    <mat-error *ngIf='form.get("username")?.hasError("min")'>
+      {{formErrors.usernameIsShort}}
+    </mat-error>
+    <mat-error *ngIf='form.get("username")?.hasError("alreadyExist")'>
+      {{formErrors.usernameIsAlreadyExist}}
+    </mat-error>
+  </mat-form-field>
+  <mat-form-field class="example-full-width">
+    <mat-label>Email</mat-label>
+    <input formControlName="email" matInput required>
+    <mat-error *ngIf='form.get("email")?.hasError("email")'>
+      {{formErrors.emailInvalid}}
+    </mat-error>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Password</mat-label>
+    <input formControlName="password" matInput required>
+    <mat-error *ngIf='form.get("password")?.hasError("min")'>
+      {{formErrors.passwordIsShort}}
+    </mat-error>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Confirm Password</mat-label>
+    <input formControlName="confirmPassword" matInput required>
+    <mat-error *ngIf='form.get("confirmPassword")?.hasError("matching")'>
+      {{formErrors.passwordIsNotMatching}}
+    </mat-error>
+  </mat-form-field>
+  <button mat-raised-button color="primary" [disabled]="!form.touched && form.valid">Submit</button>
+</form>

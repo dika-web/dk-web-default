@@ -1,2 +1,2 @@
-export * from './auth/components';
-export * from './home/home.component';
+export * from './auth';
+export * from './components/home';

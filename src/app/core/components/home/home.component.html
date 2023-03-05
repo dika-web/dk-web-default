@@ -1,0 +1,9 @@
+<button mat-button [matMenuTriggerFor]="menu">Menu</button>
+<mat-menu #menu="matMenu">
+  <button mat-menu-item>Localization</button>
+  <button mat-menu-item>Custom style</button>
+</mat-menu>
+
+<ng-container *ngIf='currentUser$ | async as user'>
+  <span> Hello {{user.username}}</span>
+</ng-container>
