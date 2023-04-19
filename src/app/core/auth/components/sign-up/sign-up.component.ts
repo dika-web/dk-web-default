@@ -1,13 +1,18 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SignUpFormService, UserDataService } from '../../services';
+import {
+  AuthService,
+  SignUpFormService,
+  UserDataService,
+} from '../../services';
 import { SharedModule } from '@core/shared.module';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { UserSelectors } from '@core/store/selectors';
 import { Store } from '@ngrx/store';
-import { FormErrorEnum } from '../../enums';
-import { takeUntil } from 'rxjs/operators';
+import { FormError } from '../../enums';
+import { take } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
+import { mapUserFormToObject } from '../../../utils';
 
 @Component({
   selector: 'app-sing-up',
@@ -16,19 +21,18 @@ import { CommonModule } from '@angular/common';
   templateUrl: './sign-up.component.html',
   styleUrls: ['./sign-up.component.less'],
 })
-export class SignUpComponent implements OnInit, OnDestroy {
+export class SignUpComponent implements OnInit {
   public form!: FormGroup;
 
   public isUserRegistered$: Observable<boolean | undefined> =
     this.store$.select(UserSelectors.selectIsUserRegistered);
 
-  public formErrors = FormErrorEnum;
-
-  private onDestroy$: Subject<any> = new Subject<any>();
+  public formErrors = FormError;
 
   constructor(
     private userDataService: UserDataService,
     private signUpFormService: SignUpFormService,
+    private authService: AuthService,
     private store$: Store
   ) {}
 
@@ -37,16 +41,17 @@ export class SignUpComponent implements OnInit, OnDestroy {
   }
 
   public registerUser(): void {
-    if (this.form.valid) {
-      this.userDataService
-        .createUser(this.form)
-        .pipe(takeUntil(this.onDestroy$))
-        .subscribe();
-    }
-  }
+    const userInfo = mapUserFormToObject(this.form);
 
-  public ngOnDestroy(): void {
-    this.onDestroy$.next();
-    this.onDestroy$.complete();
+    if (!this.form.valid) {
+      return;
+    }
+
+    this.userDataService
+      .createUser(userInfo)
+      .pipe(take(1))
+      .subscribe(() =>
+        this.authService.storeUserInfoAndRedirectToHomePage(userInfo)
+      );
   }
 }

@@ -1,16 +1,15 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService, SignInFormService } from '../../services';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SessionStorageService, SharedModule, userKey } from '@core/index';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { UserSelectors } from '@core/store/selectors/user.selectors';
 import { Store } from '@ngrx/store';
-import { isUserAuthorized } from '@core/store/actions';
 import { Router } from '@angular/router';
-import { takeUntil } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 import { mapUserFormToObject } from '../../../utils';
-import { FormErrorEnum } from '../../enums';
+import { FormError } from '../../enums';
 import { CommonModule } from '@angular/common';
+import { SharedModule } from '@shared/shared.module';
 
 @Component({
   selector: 'app-sign-in',
@@ -19,25 +18,21 @@ import { CommonModule } from '@angular/common';
   imports: [SharedModule, CommonModule, FormsModule, ReactiveFormsModule],
   styleUrls: ['./sign-in.component.less'],
 })
-export class SignInComponent implements OnInit, OnDestroy {
+export class SignInComponent implements OnInit {
   public form!: FormGroup;
+
+  public userNotExist: boolean = false;
 
   public isUserAuthorized$: Observable<boolean | undefined> =
     this.store$.select(UserSelectors.selectIsUserAuthorized);
 
-  public formError = FormErrorEnum;
-
-  private isUsernameExists$: Observable<boolean | undefined> =
-    this.store$.select(UserSelectors.selectIsUsernameExist);
-
-  private readonly onDestroy$: Subject<any> = new Subject<any>();
+  public formError = FormError;
 
   constructor(
     private loginFormService: SignInFormService,
-    private authService: AuthService,
     private store$: Store,
     private router: Router,
-    private sessionStorage: SessionStorageService
+    private authService: AuthService
   ) {}
 
   public ngOnInit(): void {
@@ -45,35 +40,24 @@ export class SignInComponent implements OnInit, OnDestroy {
   }
 
   public login(): void {
-    this.authService
-      .checkIfUserExists(this.form)
-      .pipe(takeUntil(this.onDestroy$))
-      .subscribe((isUserDataMatching: boolean) => {
-        isUserDataMatching
-          ? this.redirectToHomePage(this.form)
-          : this.redirectToSignUpPage();
-      });
+    if (this.form.valid) {
+      this.authService
+        .checkIfUserMatches(this.form)
+        .pipe(take(1))
+        .subscribe((isMatching) => {
+          const userInfo = mapUserFormToObject(this.form);
+          if (!isMatching) {
+            this.userNotExist = true;
+
+            return;
+          }
+
+          this.authService.storeUserInfoAndRedirectToHomePage(userInfo);
+        });
+    }
   }
 
-  public ngOnDestroy(): void {
-    this.onDestroy$.next();
-    this.onDestroy$.complete();
-  }
-
-  private redirectToHomePage(userData: FormGroup): void {
-    const userInfo = mapUserFormToObject(userData);
-    this.sessionStorage.setItem(userKey, userInfo);
-    this.store$.dispatch(isUserAuthorized({ isUserAuthorized: true }));
-    this.router.navigate(['home']);
-  }
-
-  private redirectToSignUpPage(): void {
-    this.isUsernameExists$
-      .pipe(takeUntil(this.onDestroy$))
-      .subscribe((isUserExists?: boolean) => {
-        if (!isUserExists) {
-          this.router.navigate(['sign-up']);
-        }
-      });
+  public navigateToSignUp(): void {
+    this.router.navigate(['sign-up']);
   }
 }

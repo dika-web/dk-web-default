@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 
 import { UserDataService } from './user-data.service';
-import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('UserDataService', () => {
   let service: UserDataService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: AngularFireDatabase, useValue: {} }],
+      imports: [HttpClientTestingModule],
     });
     service = TestBed.inject(UserDataService);
   });

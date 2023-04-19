@@ -1,33 +1,30 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { AuthService } from '../services';
-import { Injectable, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
-export class FormValidatorService implements OnDestroy {
-  private readonly onDestroy$: Subject<any> = new Subject<any>();
+export class FormValidatorService {
   constructor(private authService: AuthService) {}
 
-  public validateUsername(): ValidatorFn | null {
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (control.value) {
-        return this.authService
-          .checkIfUsernameExists(control.value)
-          .pipe(takeUntil(this.onDestroy$))
-          .subscribe((data: boolean) => {
-            data ? control.setErrors({ alreadyExist: true }) : null;
-          });
-      }
-
-      return null;
+  public validateUsername(): ValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      return this.authService.checkIfUsernameExists(control.value).pipe(
+        take(1),
+        map((data: boolean) => (data ? { usernameIsTaken: true } : null))
+      );
     };
   }
 
-  public ngOnDestroy(): void {
-    this.onDestroy$.next();
-    this.onDestroy$.complete();
+  public validateEmail(): ValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      return this.authService.checkIfEmailExists(control.value).pipe(
+        take(1),
+        map((data: boolean) => (data ? { emailIsTaken: true } : null))
+      );
+    };
   }
 }

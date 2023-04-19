@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
 import { SessionStorageService, UserInfo, userKey } from 'src/app/shared';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { UserDataService } from './data';
 import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
-import { getCurrentUser, getIsUsernameExists } from '@core/store/actions';
+import { isUserAuthorized } from '@core/store/actions';
+import { Router } from '@angular/router';
 import { FormGroup } from '@angular/forms';
-import { mapUserFormToObject, UserUtil } from '../../utils';
-import { setUserPasswordError } from '../validators';
-import { UserData } from '../enums';
+import { mapUserFormToObject } from '../../utils';
+import {
+  setUserNameIsNotExistError,
+  setUserPasswordError,
+} from '../validators';
 
 @Injectable({
   providedIn: 'root',
@@ -17,52 +20,62 @@ export class AuthService {
   constructor(
     private sessionStorage: SessionStorageService,
     private userDataService: UserDataService,
-    private store$: Store
+    private store$: Store,
+    private router: Router
   ) {}
 
-  public checkIfUserExists(userForm: FormGroup): Observable<boolean> {
-    return combineLatest([this.userDataService.getUsers()]).pipe(
-      map(([users]: [users: UserInfo[]]) =>
-        users.some((user: UserInfo) => {
-          const userData = mapUserFormToObject(userForm);
+  public checkIfUserMatches(userData: FormGroup): Observable<boolean> {
+    const userInfo = mapUserFormToObject(userData);
 
-          const isUsernameExists = UserUtil.isDataMatch(
-            user[UserData.username],
-            userData[UserData.username]
-          );
+    return this.userDataService.getUsers().pipe(
+      map((users: UserInfo[]) => {
+        const isUserExists = users.some(
+          (user: UserInfo) => user.username === userInfo.username
+        );
+        const isPasswordMatches = users.some(
+          (user: UserInfo) => user.password === userInfo.password
+        );
 
-          const isPasswordMatches = UserUtil.isDataMatch(
-            user[UserData.password],
-            userData[UserData.password]
-          );
+        if (!isUserExists) {
+          setUserNameIsNotExistError(userData);
+        }
 
-          const isUserExist = isUsernameExists && isPasswordMatches;
+        if (!isPasswordMatches) {
+          setUserPasswordError(userData);
+        }
 
-          if (isUsernameExists && !isPasswordMatches) {
-            this.store$.dispatch(
-              getIsUsernameExists({ isUsernameExist: true })
-            );
-            setUserPasswordError(userForm);
-          }
-          if (isUserExist) {
-            this.store$.dispatch(getCurrentUser({ user }));
-          }
-
-          return isUserExist;
-        })
-      )
+        return isUserExists && isPasswordMatches;
+      })
     );
   }
 
   public checkIfUsernameExists(username: string): Observable<boolean> {
-    return combineLatest([this.userDataService.getUsers()]).pipe(
-      map(([users]: [users: UserInfo[]]) =>
-        users.some((user: UserInfo) => user.username === username)
-      )
-    );
+    return this.userDataService
+      .getUsers()
+      .pipe(
+        map((users: UserInfo[]) =>
+          users.some((user: UserInfo) => user.username === username)
+        )
+      );
+  }
+
+  public checkIfEmailExists(email: string): Observable<boolean> {
+    return this.userDataService
+      .getUsers()
+      .pipe(
+        map((users: UserInfo[]) =>
+          users.some((user: UserInfo) => user.email === email)
+        )
+      );
   }
 
   public logout(): void {
     this.sessionStorage.removeItem(userKey);
+  }
+
+  public storeUserInfoAndRedirectToHomePage(userData: UserInfo): void {
+    this.sessionStorage.setItem(userKey, userData);
+    this.store$.dispatch(isUserAuthorized({ isUserAuthorized: true }));
+    this.router.navigate(['home']);
   }
 }

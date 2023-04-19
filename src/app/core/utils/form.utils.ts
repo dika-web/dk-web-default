@@ -2,8 +2,9 @@ import { FormGroup } from '@angular/forms';
 import { UserInfo } from '@shared/interfaces';
 
 export function mapUserFormToObject(form: FormGroup): UserInfo {
-  return {
-    username: form.controls['username'].value,
-    password: form.controls['password'].value,
-  };
+  const username = form.get('username')?.value ?? '';
+  const password = form.get('password')?.value ?? '';
+  const email = form.get('email')?.value ?? '';
+
+  return { username, password, email };
 }
