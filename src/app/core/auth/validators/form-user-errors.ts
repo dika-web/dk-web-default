@@ -6,8 +6,8 @@ export function setUserPasswordError(userForm: FormGroup): void {
   });
 }
 
-export function setUserEmailError(userForm: FormGroup): void {
-  (userForm?.controls as any)['email'].setErrors({
-    isEmailExisting: true,
+export function setUserNameIsNotExistError(userForm: FormGroup): void {
+  (userForm?.controls as any)['username'].setErrors({
+    usernameIsNotExists: true,
   });
 }

@@ -3,6 +3,9 @@
   <mat-form-field class="example-full-width">
     <mat-label>Username</mat-label>
     <input formControlName="username" matInput required>
+    <mat-error *ngIf='form.get("username")?.hasError("usernameIsNotExists")'>
+      {{formError.userNameIsNotExists}}
+    </mat-error>
   </mat-form-field>
   <mat-form-field>
     <mat-label>Password</mat-label>
@@ -11,5 +14,6 @@
       {{formError.passwordInvalid}}
     </mat-error>
   </mat-form-field>
-  <button mat-raised-button color="primary" [disabled]="!form.touched">Submit</button>
+  <button mat-raised-button color="primary" [disabled]="!form.touched || form.invalid" class='mb-1'>Sign in</button>
+  <button *ngIf='userNotExist' mat-raised-button color="primary" (click)='navigateToSignUp()'>Sign up</button>
 </form>

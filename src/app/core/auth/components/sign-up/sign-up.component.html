@@ -6,15 +6,15 @@
     <mat-error *ngIf='form.get("username")?.hasError("min")'>
       {{formErrors.usernameIsShort}}
     </mat-error>
-    <mat-error *ngIf='form.get("username")?.hasError("alreadyExist")'>
-      {{formErrors.usernameIsAlreadyExist}}
+    <mat-error *ngIf='form.controls["username"].hasError("usernameIsTaken")'>
+      {{formErrors.usernameIsTaken}}
     </mat-error>
   </mat-form-field>
   <mat-form-field class="example-full-width">
     <mat-label>Email</mat-label>
     <input formControlName="email" matInput required>
-    <mat-error *ngIf='form.get("email")?.hasError("email")'>
-      {{formErrors.emailInvalid}}
+    <mat-error *ngIf='form.get("email")?.hasError("emailIsTaken")'>
+      {{formErrors.emailIsTaken}}
     </mat-error>
   </mat-form-field>
   <mat-form-field>
